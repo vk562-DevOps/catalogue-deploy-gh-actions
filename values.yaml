@@ -1,0 +1,6 @@
+deployment:
+  imageRepo: 055610219795.dkr.ecr.us-east-1.amazonaws.com/roboshop/catalogue
+  imageVersion: IMAGE_VERSION
+  # IMAGE_VERSION - placeholder, this will be replaced with app version in shared library eks deploy yaml
+service:
+  type: ClusterIP

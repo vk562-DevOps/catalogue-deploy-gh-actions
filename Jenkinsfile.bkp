@@ -1,0 +1,53 @@
+pipeline{
+    // agent any - it will run job in master
+    agent{
+        node{
+            label 'agent-1'
+        }
+    } // asking jenkins to run pipeline in agent-1 node
+    environment{
+        // environment variable declaration, which can be accessed across all stages
+        Course = 'DevOps'
+        appVersion = ''
+        ACC_ID = '055610219795'
+        PROJECT = 'roboshop'
+        Component = 'catalogue'
+        REGION = 'us-east-1'
+    }
+    options{
+        timeout(time: 10, unit: 'MINUTES') // pipeline will be aborted if it takes more than 10 minutes to complete
+        disableConcurrentBuilds() // if any build is running then next build will be in queue and will wait for previous build to complete
+    }
+        parameters{
+        string(name: 'AppVersion', description: 'Which App version')
+        choice(name: 'env', choices: ['dev', 'qa', 'prod'], description: 'select environment')
+    }
+    stages{
+        stage('Deploy'){
+            steps{
+                script{
+                    withAWS(credentials: 'aws-auth', region: 'us-east-1'){
+                        sh """
+                            aws eks update-kubeconfig --region ${REGION} --name ${PROJECT}-${params.env}
+                        """
+                    }
+                }
+            }
+        }
+                    
+    }
+    post{ // post deployment action - execute after above stages 
+        always{ // this block will always execute after all stages whether success or failure
+            cleanWs()
+        }
+        success{ // if all stages are successful then execute this block
+            echo 'succeeded'
+        }
+        failure{ // if any stage fails then execute this block
+            echo 'failed'
+        }
+        aborted{ // if any stage is aborted then execute this block
+            echo 'aborted'
+        }
+    }
+}
